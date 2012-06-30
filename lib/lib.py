@@ -1,6 +1,7 @@
 import json
+
 class Location():
-	def __init__(self, x=0, y=0, w=0, data=None):
+	def __init__(self, x=0, y=0, w=0, loc=None, data=None):
 		self.x = x
 		self.y = y
 		self.w = w
@@ -8,7 +9,10 @@ class Location():
 		if data:
 			if type(data) is str: self.loads(data)
 			elif type(data) is dict: self.load(data)
-		
+		if loc and isinstance(loc, Location):
+			self.x = loc.x
+			self.y = loc.y
+			self.w = loc.w
 
 	def dump(self): return {'x':self.x, 'y':self.y, 'w':self.w}
 	def dumps(self): return json.dumps(self.dump())

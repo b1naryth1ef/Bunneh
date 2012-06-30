@@ -96,10 +96,11 @@ class RemoteClient(LineReceiver):
     def event_POS(self, packet):
         if packet['type'] == "MOVE":
             lc = Location(data=packet['pos'])
-            if lc == self.player.loc: return
-            if self.canMove and self.server.worlds[self.player.loc.w].level.checkMove(lc):
-                self.globalSend({'action':'POS', 'id':self.player.id, 'location':lc.dump()}, ignore=False)
+            if lc != self.player.loc and self.canMove and self.server.worlds[self.player.loc.w].level.checkMove(lc):
+                self.globalSend({'action':'POS', 'id':self.player.id, 'location':lc.dump()})
                 self.player.loc = lc
+                return
+            self.send({'action':'POS', 'id':self.player.id, 'location':self.player.loc.dump()})
 
     @Hook('HELLO')
     def event_HELLO(self, packet):

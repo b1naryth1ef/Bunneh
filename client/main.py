@@ -1,7 +1,7 @@
 from clib.pygcurse import PygcurseWindow
 from clib.inputlib import KeyboardInput
 from clib.const import *
-from lib.lib import World
+from lib.lib import World, Location
 from lib.mapper import test
 from lib.entity import Player
 from connection import Connection
@@ -29,6 +29,12 @@ class Game():
 
 		self.players = {}
 
+	def move(self, new):
+		if self.worlds[self.player.loc.w].level.checkMove(new):
+			self.player.loc = new
+			self.conn.write({'action':'ACTION', 'type':'MOVE', 'pos':new.dump()})  
+			self.disp.updaterender = True
+
 	def updatePos(self, cid, loc):
 		self.players[cid].loc = loc
 		self.disp.updaterender = True
@@ -55,12 +61,32 @@ class Game():
 		self.conn.write({'action':'INFO'})
 		a = True
 		while True:
-			time.sleep(.1)
+			time.sleep(.02)
 			self.disp.render()
 			if len(self.conn.Q):
 				self.conn.parse(self.conn.Q.popleft())
-			if a: 
-				self.conn.write({'action':'ACTION', 'type':'MOVE', 'pos':{'x':1, 'y':1, 'w':1}})
+			inp.retrieve()
+			new = None
+			if inp.value != ([], []):
+				if 'q' in inp.value[0]: 
+					#G.c.disconnect()
+					sys.exit()
+				if 'w' in inp.value[0]: 
+					new = Location(loc=self.player.loc)
+					new.y -= 1         
+				if 'a' in inp.value[0]:
+					new = Location(loc=self.player.loc)
+					new.x -= 1
+				if 's' in inp.value[0]:
+					new = Location(loc=self.player.loc)
+					new.y += 1
+				if 'd' in inp.value[0]:
+					new = Location(loc=self.player.loc)
+					new.x += 1
+				if new:
+					self.move(new)
+				#self.disp.updaterender = True
+				
 				a = False
 
 g = Game()
