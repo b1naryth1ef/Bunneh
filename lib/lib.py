@@ -9,6 +9,8 @@ class Location():
 		if data:
 			if type(data) is str: self.loads(data)
 			elif type(data) is dict: self.load(data)
+			elif type(data) is list: 
+				self.x, self.y, self.w = data
 		if loc and isinstance(loc, Location):
 			self.x = loc.x
 			self.y = loc.y
@@ -46,7 +48,7 @@ class Location():
 class World():
 	def __init__(self, wid, level):
 		self.id = wid
-		self.start = Location(0, 0, self.id)
+		self.start = Location(data=level.spawnpos+[wid])
 		self.level = level
 		self.ents = {}
 		self.players = {}
