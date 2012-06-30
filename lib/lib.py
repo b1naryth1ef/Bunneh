@@ -55,3 +55,9 @@ class World():
 		eid = max(self.ents.keys())+1
 		self.ents[eid] = ent
 		return eid
+
+def checkMove(player, loc, lvl):
+	if -1 <= player.loc.x-loc.x <= 1 and -1 <= player.loc.y-loc.y <= 1 and lvl.checkMove(loc):
+		return True
+	return False
+

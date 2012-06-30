@@ -98,8 +98,9 @@ class RemoteClient(LineReceiver):
     def event_POS(self, packet):
         if packet['type'] == "MOVE":
             lc = Location(data=packet['pos'])
-            m = self.server.worlds[self.player.loc.w].level.checkMove(lc)
-            if lc != self.player.loc and self.canMove and m and time.time()-self.lastMove > self.server.moveThrottle:
+            # m = self.server.worlds[self.player.loc.w].level.checkMove(lc)
+            m = checkMove(self.player, lc, self.server.worlds[self.player.loc.w].level)
+            if lc != self.player.loc and m and time.time()-self.lastMove > self.server.moveThrottle:
                 self.lastMove = time.time()
                 self.globalSend({'action':'POS', 'id':self.player.id, 'location':lc.dump()})
                 self.player.loc = lc

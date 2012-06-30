@@ -1,7 +1,7 @@
 from clib.pygcurse import PygcurseWindow
 from clib.inputlib import KeyboardInput
 from clib.const import *
-from lib.lib import World, Location
+from lib.lib import World, Location, checkMove
 from lib.mapper import test
 from lib.entity import Player
 from connection import Connection
@@ -30,7 +30,7 @@ class Game():
 		self.players = {}
 
 	def move(self, new):
-		if self.worlds[self.player.loc.w].level.checkMove(new):
+		if checkMove(self.player, new, self.worlds[self.player.loc.w].level):
 			self.player.loc = new
 			self.conn.write({'action':'ACTION', 'type':'MOVE', 'pos':new.dump()})  
 			self.disp.updaterender = True
