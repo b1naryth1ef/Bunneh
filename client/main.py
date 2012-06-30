@@ -7,7 +7,7 @@ from lib.entity import Player
 from connection import Connection
 from display import Display
 
-import pygame, thread
+import pygame, thread, random
 import sys, os, time
 
 win = PygcurseWindow(80, 60, fullscreen=False, fontsize=14)
@@ -30,7 +30,7 @@ class Game():
 		self.players = {}
 
 	def updatePos(self, cid, loc):
-		self.players[cid].pos = loc
+		self.players[cid].loc = loc
 		self.disp.updaterender = True
 
 	def addPlayer(self, plyr):
@@ -53,12 +53,15 @@ class Game():
 		thread.start_new_thread(self.conn.loop, ())
 		self.running = True
 		self.conn.write({'action':'INFO'})
+		a = True
 		while True:
-			time.sleep(1/30)
+			time.sleep(.1)
 			self.disp.render()
 			if len(self.conn.Q):
 				self.conn.parse(self.conn.Q.popleft())
-
+			if a: 
+				self.conn.write({'action':'ACTION', 'type':'MOVE', 'pos':{'x':1, 'y':1, 'w':1}})
+				a = False
 
 g = Game()
 g.startup()

@@ -87,11 +87,19 @@ class RemoteClient(LineReceiver):
             print 'Was not able to parse line! (%s)' % e
         print ">>> ",line
 
+    def globalSend(self, data, ignore=True):
+        for i in self.server.clients.values():
+            if i != self or not ignore:
+                i.send(data)
+
     @Hook('ACTION')
     def event_POS(self, packet):
         if packet['type'] == "MOVE":
-            if self.canMove:
-                pos = packet['data']['pos']
+            lc = Location(data=packet['pos'])
+            if lc == self.player.loc: return
+            if self.canMove and self.server.worlds[self.player.loc.w].level.checkMove(lc):
+                self.globalSend({'action':'POS', 'id':self.player.id, 'location':lc.dump()}, ignore=False)
+                self.player.loc = lc
 
     @Hook('HELLO')
     def event_HELLO(self, packet):
@@ -101,10 +109,9 @@ class RemoteClient(LineReceiver):
     def event_INFO(self, packet):
         self.send({'action':'LIST', 'data':[i.player.dump() for i in self.server.clients.values() if i != self]})
         if self.waitForInfo:
-            for c in self.server.clients.values():
-                if c != self:
-                    c.send({'action':'ADD_ENT', 'type':'player', 'data':{'name':self.player.name, 'id':self.cid, 'loc':self.player.loc.dump()}})
+            self.globalSend({'action':'ADD_ENT', 'type':'player', 'data':{'name':self.player.name, 'id':self.cid, 'loc':self.player.loc.dump()}})
             self.waitForInfo = False
+            self.canMove = True
 
     @Hook('JOIN')
     def event_JOIN(self, packet):

@@ -43,7 +43,10 @@ class Connection():
     
     def loop(self):
         while True:
-            self.read(parse=2)
+            try: self.read(parse=2)
+            except socket.error: 
+                print 'Connection lost!'
+                sys.exit()
 
     def read(self, b=1024, parse=0):
         line = self.c.recv(b)

@@ -1,3 +1,5 @@
+from lib import Location
+
 clean = [
 "#######################################",
 "#0###                                 #",
@@ -25,8 +27,11 @@ class Map(object):
         self.spawnpos = [0, 0]
         self.genHitMap()
 
-    def getHit(self, pos):
+    def checkMove(self, pos):
+        if isinstance(pos, Location): pos = (pos.x, pos.y)
+        else: pos = tuple(pos)
         return self.hit[tuple(pos)]['empty']
+
 
     def getRender(self):
         r = []
