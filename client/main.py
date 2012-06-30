@@ -78,6 +78,12 @@ class Game():
 					new.y += 1
 				if 'd' in inp.value[0]:
 					new.x += 1
+				if 't' in inp.value[0]:
+					self.disp.clear()
+					txt = self.win.input("Talk: ", 0, 0, fgcolor=BLUE)
+					if txt:
+						print 'Would say: "%s"' % txt
+					self.disp.updaterender = True
 				if new != self.player.loc:
 					self.move(new)
 

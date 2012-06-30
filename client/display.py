@@ -7,6 +7,9 @@ class Display(object):
         self.game = game
         self.updaterender = True
 
+    def clear(self):
+        self.win.setscreencolors(clear=True)
+
     def render(self):
         if self.updaterender:
             self.win.setscreencolors(clear=True)
