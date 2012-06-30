@@ -66,26 +66,21 @@ class Game():
 			if len(self.conn.Q):
 				self.conn.parse(self.conn.Q.popleft())
 			inp.retrieve()
-			new = None
+			new = Location(loc=self.player.loc)
 			if inp.value != ([], []):
 				if 'q' in inp.value[0]: 
-					#G.c.disconnect()
 					sys.exit()
 				if 'w' in inp.value[0]: 
-					new = Location(loc=self.player.loc)
 					new.y -= 1         
 				if 'a' in inp.value[0]:
-					new = Location(loc=self.player.loc)
 					new.x -= 1
 				if 's' in inp.value[0]:
-					new = Location(loc=self.player.loc)
 					new.y += 1
 				if 'd' in inp.value[0]:
-					new = Location(loc=self.player.loc)
 					new.x += 1
-				if new:
+				if new != self.player.loc:
 					self.move(new)
-				#self.disp.updaterender = True
+
 				
 				a = False
 
