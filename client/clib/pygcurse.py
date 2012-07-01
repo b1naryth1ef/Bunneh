@@ -185,7 +185,7 @@ class PygcurseSurface(object):
 
         inputObj = PygcurseInput(self, prompt, x, y, maxlength, fgcolor, bgcolor, promptfgcolor, promptbgcolor, whitelistchars, blacklistchars)
         self.inputcursor = inputObj.startx, inputObj.starty
-
+        #self.inputcursor = x, y
         while True: # the event loop
             self._inputcursormode = inputObj.insertMode and 'insert' or 'underline'
 
@@ -1773,11 +1773,11 @@ class PygcurseInput():
             pygsurfObj.pushcursor()
             if self.eraseBufferSize is not None:
                 # need to blank out the previous drawn, longer string.
-                pygsurfObj.write(self.prompt + (' ' * self.eraseBufferSize))
+                pygsurfObj.write(self.prompt + (' ' * self.eraseBufferSize), self.startx, self.starty)
                 pygsurfObj.popcursor() # revert to the original cursor before proceeding
                 pygsurfObj.pushcursor()
                 self.eraseBufferSize = None
-            pygsurfObj.write(self.prompt, fgcolor=self._promptfgcolor, bgcolor=self._promptbgcolor)
+            pygsurfObj.write(self.prompt, self.startx, self.starty, fgcolor=self._promptfgcolor, bgcolor=self._promptbgcolor)
             pygsurfObj.write(''.join(self.buffer) + ' ', fgcolor=self._fgcolor, bgcolor=self._bgcolor) # the space at the end is to change the color of the cursor
             afterPromptX, afterPromptY = pygsurfObj.getnthcellfrom(self.startx, self.starty, len(self.prompt))
             pygsurfObj.inputcursor = pygsurfObj.getnthcellfrom(afterPromptX, afterPromptY, self.cursor)

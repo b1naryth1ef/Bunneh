@@ -83,8 +83,8 @@ class Game():
 				if 's' in inp.value[0]: new.y += 1
 				if 'd' in inp.value[0]: new.x += 1
 				if 't' in inp.value[0]:
-					self.disp.clear()
-					txt = self.win.input("Talk: ", 0, 0, fgcolor=BLUE)
+					#self.disp.clear()
+					txt = self.win.input("Talk: ", 0, self.disp.offset, fgcolor=BLUE)
 					if txt: self.conn.write({'action':'MSG', 'data':txt})
 				if 'c' in inp.value[0]:
 					self.disp.clear()
