@@ -47,7 +47,7 @@ class Display(object):
         self.checkChat()
         for msg in self.game.msg:
             if msg['type'] is 'msg':
-                name = '%s: ' % self.game.players[msg['id']].name.title()
+                name = '%s: ' % self.game.players[msg['id']].name
                 self.displayText(name, 0, self.offset, fgcolor=RED)
                 self.displayText(msg['content'], len(name), self.offset, fgcolor=BLUE)
             elif msg['type'] is 'con':
@@ -71,6 +71,14 @@ class Display(object):
         else: htxt = '= '+' '*4
         self.displayText(htxt, 9, s, fgcolor=RED)
         self.displayText(']', 18, s, fgcolor=BLUE)
+
+    def getCenterPos(self, text, inc=False):
+        x = (self.win.centerx-len(text)/2)
+        y = self.win.centery
+        if inc:
+            x += self.offset[0]
+            y += self.offset[1]
+        return (x, y)
 
     def centerText(self, text, y=0, x=0, **args):
         self.win.putchars(text, (self.win.centerx-len(text)/2)+x, self.win.centery+y, **args)

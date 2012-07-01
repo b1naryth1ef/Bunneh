@@ -8,7 +8,7 @@ from twisted.protocols.basic import LineReceiver
 from twisted.internet import reactor, task
 
 HOOKS = {}
-debug = False
+debug = True
 
 def Hook(hook):
     def deco(func):
@@ -129,22 +129,23 @@ class RemoteClient(LineReceiver):
 
     @Hook('JOIN')
     def event_JOIN(self, packet):
+        if not packet['name']:
+            return self.kick('Invalid Nickname!')
         self.cid = self.server.addClient(self)
         pos = Location(x=random.randint(1, 10), y=random.randint(1, 10), w=1)
         self.player = Player(id=self.cid, name=packet['name'], loc=pos)#self.server.worlds[1].start.dump())
         self.hasConnected = True
         if self.cid != -1:
-            self.send({'action':'JOIN', 'id':self.cid, 'location':self.player.loc.dump()})
+            self.send({'action':'JOIN', 'id':self.cid, 'obj':self.player.dump()})
             self.waitForInfo = True
         else:
-            self.send({'action':'KICK', 'reason':(0, 'Server is full!')})
-            self.transport.loseConnection()
+            return self.kick('Server is full!')
 
-    @Hook('PONG')
+    @Hook('PING')
     def event_PONG(self, packet):
-        self.lastPong = time.time()
+        self.send({'action':'PONG', 'data':time.time()})
 
-    def action_KICK(self, reason):
+    def kick(self, reason):
         self.send({'action':'KICK', 'reason':reason})
         self.transport.loseConnection()
 

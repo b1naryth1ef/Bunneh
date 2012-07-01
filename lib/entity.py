@@ -20,10 +20,10 @@ class Player(Entity):
 
 	def dump(self):
 		return {
-		'id':self.id,
-		'name':self.name,
-		'loc':self.loc.dump(),
-		'char':self.char
+			'id':self.id,
+			'name':self.name,
+			'loc':self.loc.dump(),
+			'char':self.char
 		}
 
 	def load(self, obj):

@@ -79,8 +79,12 @@ class Game():
 			self.players[data['data']['id']] = Player(**data['data'])
 		self.disp.updaterender = True
 
-	def startup(self):
-		self.conn.connect(game=self, ip=self.win.input("Server IP: ", 0, 0, fgcolor=BLUE), name=self.win.input("Username: ", 0, 0, fgcolor=BLUE))
+	def startScreen(self):
+		g = self.disp.getCenterPos('Server IP: ')
+		ip = self.win.input("Server IP: ", g[0], g[1], fgcolor=BLUE)
+		g = self.disp.getCenterPos('Username: ')
+		name = self.win.input('Username: ', g[0], g[1], fgcolor=BLUE)
+		self.conn.connect(game=self, ip=ip, name=name)
 
 	def startLoop(self):
 		self.setup()
@@ -119,4 +123,4 @@ class Game():
 				self.update = False
 
 g = Game()
-g.startup()
+g.startScreen()
