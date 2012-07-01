@@ -55,7 +55,6 @@ class Display(object):
                 self.displayText(msg['content'], len(self.game.get('console_prefix'))+1, self.offset, fgcolor=RED)
             self.offset += 1
 
-
     def displayInfo(self, s=50):
         self.displayText('-'*80, 0, s)
         p = self.game.getPlayer()

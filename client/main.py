@@ -38,6 +38,9 @@ class Game():
 
 		self.get = self.varlist.getval
 
+	def quit(self):
+		sys.exit()
+
 	def setup(self):
 		Var('console_prefix', '>>', varlist=self.varlist)
 		Var('chat_keeptime', 3, varlist=self.varlist)
@@ -92,7 +95,7 @@ class Game():
 			inp.retrieve()
 			new = Location(loc=self.player.loc)
 			if inp.value != ([], []):
-				if 'q' in inp.value[0]: sys.exit()
+				if 'q' in inp.value[0]: self.quit()
 				if 'w' in inp.value[0]: new.y -= 1         
 				if 'a' in inp.value[0]: new.x -= 1
 				if 's' in inp.value[0]: new.y += 1
@@ -105,8 +108,9 @@ class Game():
 					txt = self.win.input("Console: ", 0, self.disp.offset, fgcolor=BLUE)
 					if txt:
 						txt = txt.split(' ')
-						if commands.get(txt[0]): commands.get(txt[0])(txt, self)
-						else: self.conn.write({'action':'MSG', 'data':' '.join(txt)})
+						if commands.get(txt[0]): 
+							commands.get(txt[0])(txt, self)
+						#else: self.conn.write({'action':'CMD', 'data':' '.join(txt)})
 				if new != self.player.loc: self.move(new)
 			if self.disp.checkChat():
 				self.update = True

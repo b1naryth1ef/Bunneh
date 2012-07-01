@@ -8,7 +8,6 @@ def cmd(c):
         raise Exception('Duplicate hook!')
     return deco
 
-
 @cmd('echo')
 def echo_cmd(c, g):
 	g.addMsg(' '.join(c[1:]))
@@ -27,3 +26,7 @@ def echo_cmd(c, g):
 				g.addMsg('Var %s is unwriteable!' % c[1])
 		else:
 			g.addMsg('No such var %s' % c[1])
+
+@cmd('quit')
+def quit_cmd(c, g):
+	g.quit()

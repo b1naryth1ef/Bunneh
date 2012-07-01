@@ -110,9 +110,10 @@ class RemoteClient(LineReceiver):
 
     @Hook('MSG')
     def event_MSG(self, packet):
-        if packet['data'].startswith('/'): pass
-        else:
-            self.globalSend({'action':'MSG', 'data':packet['data'], 'id':self.cid}, False)
+        self.globalSend({'action':'MSG', 'data':packet['data'], 'id':self.cid}, False)
+
+    @Hook('CMD')
+    def event_CMD(self, packet): pass
 
     @Hook('HELLO')
     def event_HELLO(self, packet):
