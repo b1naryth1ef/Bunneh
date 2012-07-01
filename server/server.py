@@ -8,6 +8,7 @@ from twisted.protocols.basic import LineReceiver
 from twisted.internet import reactor, task
 
 HOOKS = {}
+debug = False
 
 def Hook(hook):
     def deco(func):
@@ -87,7 +88,7 @@ class RemoteClient(LineReceiver):
                 HOOKS[line['action']](self, line)
         except Exception, e:
             print 'Was not able to parse line! (%s)' % e
-        print ">>> ",line
+        if debug: print ">>> ",line
 
     def globalSend(self, data, ignore=True):
         for i in self.server.clients.values():
@@ -106,6 +107,12 @@ class RemoteClient(LineReceiver):
                 self.player.loc = lc
                 return
             self.send({'action':'POS', 'id':self.player.id, 'location':self.player.loc.dump()})
+
+    @Hook('MSG')
+    def event_MSG(self, packet):
+        if packet['data'].startswith('/'): pass
+        else:
+            self.globalSend({'action':'MSG', 'data':packet['data'], 'id':self.cid}, False)
 
     @Hook('HELLO')
     def event_HELLO(self, packet):

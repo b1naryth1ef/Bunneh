@@ -6,14 +6,19 @@ class Display(object):
         self.win = win
         self.game = game
         self.updaterender = True
+        self.offset = 0
+        self.chat_times = {}
 
     def clear(self):
         self.win.setscreencolors(clear=True)
+        self.win.update()
 
     def render(self):
         if self.updaterender:
+            self.offset = 0
             self.win.setscreencolors(clear=True)
             self.renderMap()
+            self.renderChat()
             #self.displayInfo()
             self.updaterender = False
             self.win.update()
@@ -22,9 +27,28 @@ class Display(object):
     def renderMap(self):
         for x, row in enumerate(self.game.worlds[self.game.player.loc.w].level.getRender()):
             self.displayText(row, 0, x, fgcolor=(255,   0,   0), bgcolor=(  0,   0,   0))
+            self.offset += 1
         for plyr in self.game.players.values():
             pos = plyr.loc
             self.displayText(plyr.char, pos.x, pos.y, fgcolor=(0,255,0))
+
+    def renderChat(self):
+        self.offset += 1
+        if len(self.game.chat) > 8:
+            self.game.chat.pop(0)
+            del self.chat_times[0]
+        for index, item in enumerate(self.game.chat):
+            if index in self.chat_times:
+                if time.time()-self.chat_times[index] >= 3:
+                    del self.chat_times[index]
+                    self.game.chat.pop(index)  
+            else:
+                self.chat_times[index] = time.time()
+            name = '%s: ' % self.game.players[item[0]].name.title()
+            self.displayText(name, 0, self.offset, fgcolor=RED)
+            self.displayText(item[1], len(name), self.offset, fgcolor=BLUE)
+            self.offset += 1
+
 
     def displayInfo(self, s=50):
         self.displayText('-'*80, 0, s)

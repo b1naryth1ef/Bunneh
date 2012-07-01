@@ -22,6 +22,7 @@ class Connection():
             'ADD_ENT':self.packet_ADDENT,
             'RMV_ENT':self.packet_RMVENT,
             'LIST':self.packet_LIST,
+            'MSG':self.packet_MSG,
         }
 
         self.connected = False
@@ -87,4 +88,7 @@ class Connection():
 
     def packet_HELLO(self, packet):
         self.server_data = packet['data']
+
+    def packet_MSG(self, packet):
+        self.game.addChat((packet['id'], packet['data']))
 

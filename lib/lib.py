@@ -51,7 +51,6 @@ class World():
 		self.start = Location(data=level.spawnpos+[wid])
 		self.level = level
 		self.ents = {}
-		self.players = {}
 
 	def addEnt(self, ent=None):
 		eid = max(self.ents.keys())+1
