@@ -32,21 +32,27 @@ class Display(object):
             pos = plyr.loc
             self.displayText(plyr.char, pos.x, pos.y, fgcolor=(0,255,0))
 
+    def checkChat(self):
+        ret = False
+        for x, i in enumerate(self.game.msg):
+            if i['time'] == None: i['time'] = time.time()
+            elif time.time()-i['time'] >= self.game.get('chat_keeptime'):
+                self.game.msg.pop(x)
+                self.game.update = True
+                ret = True
+        return ret
+
     def renderChat(self):
         self.offset += 1
-        if len(self.game.chat) > 8:
-            self.game.chat.pop(0)
-            del self.chat_times[0]
-        for index, item in enumerate(self.game.chat):
-            if index in self.chat_times:
-                if time.time()-self.chat_times[index] >= 3:
-                    del self.chat_times[index]
-                    self.game.chat.pop(index)  
-            else:
-                self.chat_times[index] = time.time()
-            name = '%s: ' % self.game.players[item[0]].name.title()
-            self.displayText(name, 0, self.offset, fgcolor=RED)
-            self.displayText(item[1], len(name), self.offset, fgcolor=BLUE)
+        self.checkChat()
+        for msg in self.game.msg:
+            if msg['type'] is 'msg':
+                name = '%s: ' % self.game.players[msg['id']].name.title()
+                self.displayText(name, 0, self.offset, fgcolor=RED)
+                self.displayText(msg['content'], len(name), self.offset, fgcolor=BLUE)
+            elif msg['type'] is 'con':
+                self.displayText(str(self.game.get('console_prefix')), 0, self.offset, fgcolor=BLUE)
+                self.displayText(msg['content'], len(self.game.get('console_prefix'))+1, self.offset, fgcolor=RED)
             self.offset += 1
 
 

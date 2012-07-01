@@ -1,5 +1,40 @@
 import json
 
+class Var():
+	def __init__(self, name, value, writeable=True, varlist=None):
+		self.name = name
+		self.value = value
+
+		if varlist: varlist.add(self)
+
+		self.canWrite = writeable
+
+	def __str__(self):
+		return self.value
+
+	def __len__(self):
+		return len(self.value)
+
+class Varlist():
+	def __init__(self):
+		self._vl = {}
+
+	def add(self, obj):
+		self._vl[obj.name] = obj
+
+	def get(self, name):
+		if name in self._vl.keys():
+			return self._vl[name]
+
+	def getval(self, name):
+		return self.get(name).value
+
+	def has(self, name):
+		return name in self._vl.keys()
+
+	def __delitem__(self, item):
+		del self._vl[item]
+
 class Location():
 	def __init__(self, x=0, y=0, w=0, loc=None, data=None):
 		self.x = x

@@ -20,6 +20,7 @@ keymap = {
     K_r: 'r',
     K_e: 'e',
     K_t: 't',
+    K_c: 'c',
 }
 
 class KeyboardInput(object):
