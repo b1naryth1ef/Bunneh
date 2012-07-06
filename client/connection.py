@@ -8,6 +8,7 @@ import thread
 port = 1337
 prefix = ""
 suffix = "\r\n"
+hashpath = os.path.join(os.getcwd(), '.hashes')
 
 class Connection():
     def __init__(self):
@@ -19,6 +20,7 @@ class Connection():
         self.actions = {
             'HELLO':self.packet_HELLO,
             'JOIN':self.packet_JOIN,
+            #'AUTH':self.packet_AUTH,
             'POS':self.packet_POS,
             'ADD_ENT':self.packet_ADDENT,
             'RMV_ENT':self.packet_RMVENT,
@@ -30,11 +32,24 @@ class Connection():
         self.connected = False
         self.connecting = False
 
-    def disconnect(self): pass
+    def setupHash(self):
+        self.curhash = None
+        self.hashname = '.%s_%s' % (self.ip, self.name)
+
+        if os.path.exists(hashpath):
+            if self.hashname in os.listdir(hashpath):
+                with open(os.path.join(hashpath, self.hashname)) as f:
+                    self.curhash = f.read()
+        else: os.mkdir(hashpath)
+
+    def disconnect(self):
+        with open(os.path.join(hashpath, self.hashname), 'w') as f:
+            f.write(self.curhash)
 
     def connect(self, **kwargs):
         if not self.connected:
             self.__dict__.update(kwargs)
+            self.setupHash()
             self.c = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.c.connect((self.ip, port))
             self.write({'action':'HELLO'})
@@ -70,8 +85,11 @@ class Connection():
         self.c.send("%s%s%s" % (prefix, json.dumps(packet), suffix))
         if ret: return self.read()
 
+    def packet_AUTHED(self, packet): pass
+
     def packet_JOIN(self, packet):
         if self.connecting:
+            self.curhash = packet['hash']
             self.game.player = Player(data=packet['obj'])
             self.game.addPlayer(self.game.player)
             self.connecting = False
@@ -85,7 +103,7 @@ class Connection():
             self.connecting = False
             return
         self.server_data = packet['data']
-        self.write({'action':'JOIN', 'name':self.name})
+        self.write({'action':'JOIN', 'name':self.name, 'hash':self.curhash})
 
     def packet_LIST(self, packet):
         for i in packet['data']:

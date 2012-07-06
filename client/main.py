@@ -39,6 +39,7 @@ class Game():
 		self.get = self.varlist.getval
 
 	def quit(self):
+		self.conn.disconnect()
 		sys.exit()
 
 	def setup(self):

@@ -32,7 +32,6 @@ class Map(object):
         else: pos = tuple(pos)
         return self.hit[tuple(pos)]['empty']
 
-
     def getRender(self):
         r = []
         for ypos, row in enumerate(self.clean):

@@ -3,3 +3,5 @@
 *~
 #*
 client/spec.txt
+*.db
+.hashes

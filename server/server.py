@@ -1,5 +1,6 @@
 import json, random
 import sys, os, time
+import database
 from lib.lib import *
 from lib.entity import *
 from lib.mapper import test
@@ -25,7 +26,7 @@ class Server():
         self.max_clients = max_clients
         self.motd = 'Woooot! Bitches and hoes yo!'
         self.port = 1337
-        self.moveThrottle = .1
+        self.moveThrottle = .08
 
         self.worlds = {
         1:World(1, test)
@@ -132,12 +133,16 @@ class RemoteClient(LineReceiver):
         if not packet['name']:
             return self.kick('Invalid Nickname!')
         self.cid = self.server.addClient(self)
-        pos = Location(x=random.randint(1, 10), y=random.randint(1, 10), w=1)
-        self.player = Player(id=self.cid, name=packet['name'], loc=pos)#self.server.worlds[1].start.dump())
-        self.hasConnected = True
         if self.cid != -1:
-            self.send({'action':'JOIN', 'id':self.cid, 'obj':self.player.dump()})
-            self.waitForInfo = True
+            self.player = Player(id=self.cid, name=packet['name'], loc=self.server.worlds[1].start.dump())
+            self.hasConnected = True #This is really used for rmv objects. Dont move it plz!
+            obj = database.getUser(self.player, packet['hash'])
+            if obj != None:
+                self.player.pos = Location(data=obj.pos)
+                self.send({'action':'JOIN', 'id':self.cid, 'obj':self.player.dump(), 'hash':obj.hashkey})
+                self.waitForInfo = True
+            else:
+                self.kick('Invalid hashkey!')
         else:
             return self.kick('Server is full!')
 
