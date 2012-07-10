@@ -5,6 +5,7 @@ from lib.entity import Player
 from collections import deque
 import thread
 
+version = 1
 port = 1337
 prefix = ""
 suffix = "\r\n"
@@ -20,7 +21,6 @@ class Connection():
         self.actions = {
             'HELLO':self.packet_HELLO,
             'JOIN':self.packet_JOIN,
-            #'AUTH':self.packet_AUTH,
             'POS':self.packet_POS,
             'ADD_ENT':self.packet_ADDENT,
             'RMV_ENT':self.packet_RMVENT,
@@ -103,7 +103,7 @@ class Connection():
             self.connecting = False
             return
         self.server_data = packet['data']
-        self.write({'action':'JOIN', 'name':self.name, 'hash':self.curhash})
+        self.write({'action':'JOIN', 'name':self.name, 'hash':self.curhash, "version":version})
 
     def packet_LIST(self, packet):
         for i in packet['data']:

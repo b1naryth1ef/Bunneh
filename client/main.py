@@ -47,16 +47,16 @@ class Game():
 		Var('chat_keeptime', 3, varlist=self.varlist)
 
 	def getCurrentWorld(self):
-		return self.worlds[self.player.loc.w]
+		return self.worlds[self.player.pos.w]
 
 	def move(self, new):
 		if checkMove(self.player, new, self.getCurrentWorld().level):
-			self.player.loc = new
+			self.player.pos = new
 			self.conn.write({'action':'ACTION', 'type':'MOVE', 'pos':new.dump()})  
 			self.disp.updaterender = True
 
 	def updatePos(self, cid, loc):
-		self.players[cid].loc = loc
+		self.players[cid].pos = loc
 		self.disp.updaterender = True
 
 	def addMsg(self, msg):
@@ -98,7 +98,7 @@ class Game():
 			if len(self.conn.Q):
 				self.conn.parse(self.conn.Q.popleft())
 			inp.retrieve()
-			new = Location(loc=self.player.loc)
+			new = Location(loc=self.player.pos)
 			if inp.value != ([], []):
 				if 'q' in inp.value[0]: self.quit()
 				if 'w' in inp.value[0]: new.y -= 1         
@@ -107,7 +107,7 @@ class Game():
 				if 'd' in inp.value[0]: new.x += 1
 				if 't' in inp.value[0]:
 					txt = self.win.input("Talk: ", 0, self.disp.offset, fgcolor=BLUE)
-					if txt: self.conn.write({'action':'MSG', 'data':txt})
+					if txt: self.conn.write({'action':'ACTION', 'type':'MSG', 'data':txt})
 					self.update = True
 				if 'c' in inp.value[0]:
 					txt = self.win.input("Console: ", 0, self.disp.offset, fgcolor=BLUE)
@@ -115,8 +115,8 @@ class Game():
 						txt = txt.split(' ')
 						if commands.get(txt[0]): 
 							commands.get(txt[0])(txt, self)
-						#else: self.conn.write({'action':'CMD', 'data':' '.join(txt)})
-				if new != self.player.loc: self.move(new)
+						else: self.conn.write({'action':'ACTION', 'type':'CMD', 'data':' '.join(txt)})
+				if new != self.player.pos: self.move(new)
 			if self.disp.checkChat():
 				self.update = True
 			if self.update:

@@ -11,9 +11,9 @@ class Player(Entity):
 		self.id = id
 		self.name = name
 		if not isinstance(loc, Location):
-			self.loc = Location(data=loc)
+			self.pos = Location(data=loc)
 		else:
-			self.loc = loc
+			self.pos = loc
 		self.char = "x"
 		if data:
 			self.load(data)
@@ -22,11 +22,11 @@ class Player(Entity):
 		return {
 			'id':self.id,
 			'name':self.name,
-			'loc':self.loc.dump(),
+			'pos':self.pos.dump(),
 			'char':self.char
 		}
 
 	def load(self, obj):
-		if obj.get('loc'):
-			obj['loc'] = Location(data=obj['loc'])
+		if obj.get('pos'):
+			obj['pos'] = Location(data=obj['pos'])
 		self.__dict__.update(obj)

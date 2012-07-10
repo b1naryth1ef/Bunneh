@@ -12,9 +12,9 @@ class User(Model):
 	pos = CharField()
 	hashkey = CharField()
 
-
 def addUser(obj):
-	u = User(name=obj.name, pos=obj.loc, hashkey=str(random.randrange(10e14, 10e15)))
+	print 'Adding user!'
+	u = User(name=obj.name, pos=obj.pos.dumps(), hashkey=str(random.randrange(10e14, 10e15)))
 	u.save()
 	return u
 
@@ -25,6 +25,9 @@ def getUser(obj, hashk):
 			return q[0]
 	else:
 		return addUser(obj)
-	return None
+
+def getUserByID(uid):
+	return [i for i in User.select().where(id=uid)][0]
+
 
 User.create_table(True)

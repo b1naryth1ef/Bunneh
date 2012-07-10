@@ -53,8 +53,12 @@ class Location():
 
 	def dump(self): return {'x':self.x, 'y':self.y, 'w':self.w}
 	def dumps(self): return json.dumps(self.dump())
-	def load(self, d): self.__dict__.update(d)
-	def loads(self, d): self.load(json.loads(d))
+	def load(self, d): 
+		self.__dict__.update(d)
+		return self
+	def loads(self, d): 
+		self.load(json.loads(d))
+		return self
 
 	def _getpos(self):
 		return [self.x, self.y]
@@ -93,7 +97,7 @@ class World():
 		return eid
 
 def checkMove(player, loc, lvl):
-	if -1 <= player.loc.x-loc.x <= 1 and -1 <= player.loc.y-loc.y <= 1 and lvl.checkMove(loc):
+	if -1 <= player.pos.x-loc.x <= 1 and -1 <= player.pos.y-loc.y <= 1 and lvl.checkMove(loc):
 		return True
 	return False
 
