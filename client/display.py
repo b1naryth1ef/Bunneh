@@ -28,6 +28,9 @@ class Display(object):
         for x, row in enumerate(self.game.getCurrentLevel().map.getRender()):
             self.displayText(row, 0, x, fgcolor=(255,   0,   0), bgcolor=(  0,   0,   0))
             self.offset += 1
+        if not self.game.var.get('hide_ents'):
+            for ent in self.game.getCurrentLevel().ents.values():
+                self.displayText(ent.char, ent.pos.x, ent.pos.y, fgcolor=ORANGE)
         for plyr in self.game.players.values():
             if self.game.var.get('hide_players') and not plyr == self.game.player:
                 continue

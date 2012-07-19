@@ -10,7 +10,7 @@ class BaseLevel(object):
 	canKillServer = False
 
 	talkThrottle = .3
-	moveThrottle = .08
+	moveThrottle = .06
 
 class NewbLevel(BaseLevel):
 	canMove = True

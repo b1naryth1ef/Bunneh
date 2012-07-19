@@ -25,6 +25,7 @@ class Map(object):
         self.rower = []
         self.hit = {}
         self.special = {}
+        self.ai = {}
         self.spawnpos = [1, 1]
         self.bounds = [0, 0]
         self.genHitMap()
@@ -32,12 +33,15 @@ class Map(object):
     def getOrg(self):
         return [self.clean, self.actions]
 
+    def inBounds(self, pos):
+        if 0 < pos[0] < self.bounds[0] and 0 < pos[1] < self.bounds[1]:
+            return True
+        return False
+
     def checkMove(self, pos):
-        # if isinstance(pos, Location): pos = (pos.x, pos.y)
-        # else: 
         pos = tuple(pos)
         pos = (pos[0], pos[1])
-        if 0 < pos[0] < self.bounds[0] and 0 < pos[1] < self.bounds[1]:
+        if self.inBounds(pos):
             if pos in self.hit.keys():
                 return self.hit[tuple(pos)]['empty']
         return False #Expected behaivor: return bool
@@ -72,3 +76,8 @@ class Map(object):
         print 'Bounds:', self.bounds
 
 test = Map(clean, action)
+
+# print test.checkMove((6, 3))
+# print test.checkMove((6, 4))
+# print test.checkMove((6, 5))
+# print test.checkMove((6, 6))

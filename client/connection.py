@@ -22,6 +22,7 @@ class Connection():
             'HELLO':self.packet_HELLO,
             'JOIN':self.packet_JOIN,
             'POS':self.packet_POS,
+            'ENT_POS':self.packet_ENTPOS,
             'ADD_ENT':self.packet_ADDENT,
             'RMV_ENT':self.packet_RMVENT,
             'LIST':self.packet_LIST,
@@ -117,6 +118,9 @@ class Connection():
 
     def packet_POS(self, packet):
         self.game.updatePos(packet['id'], Location(data=packet['location']))
+
+    def packet_ENTPOS(self, packet):
+        self.game.updateEntPos(packet['id'], Location(data=packet['loc']))
 
     def packet_RMVENT(self, packet):
         if packet['type'] == 'player':

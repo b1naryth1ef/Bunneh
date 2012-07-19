@@ -2,7 +2,7 @@ from clib.pygcurse import PygcurseWindow
 from clib.inputlib import KeyboardInput
 from clib.const import *
 from lib.lib import World, Location, checkMove, Var, Varlist
-from lib.entity import Player
+from lib.entity import *
 from connection import Connection
 from display import Display
 from commands import commands
@@ -35,8 +35,11 @@ class Game():
 
 		# self.get = self.varlist.getval
 
+	def getLevel(self, pos):
+		return self.worlds[pos.w].levels[pos.l]
+
 	def getCurrentLevel(self):
-		return self.worlds[self.player.pos.w].levels[self.player.pos.l]
+		return self.getLevel(self.player.pos)
 
 	def quit(self):
 		self.conn.disconnect()
@@ -46,6 +49,7 @@ class Game():
 		Var('console_prefix', '>>', varlist=self.var)
 		Var('chat_keeptime', 3, varlist=self.var)
 		Var('hide_players', 0, varlist=self.var)
+		Var('hide_ents', 0, varlist=self.var)
 
 	def getCurrentWorld(self):
 		return self.worlds[self.player.pos.w]
@@ -58,6 +62,10 @@ class Game():
 
 	def updatePos(self, cid, loc):
 		self.players[cid].pos = loc
+		self.disp.updaterender = True
+
+	def updateEntPos(self, eid, loc):
+		self.getLevel(loc).ents[eid].pos = loc
 		self.disp.updaterender = True
 
 	def addMsg(self, msg):
@@ -79,6 +87,9 @@ class Game():
 	def addEnt(self, data):
 		if data['type'] == 'player':
 			self.players[data['data']['id']] = Player(**data['data'])
+		elif data['type'] == 'mob':
+			m = MobHolder(data=data['data'])
+			#self.getLevel(Location(mob_types[data['data']['type']])
 		self.disp.updaterender = True
 
 	def startScreen(self):

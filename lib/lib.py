@@ -1,5 +1,6 @@
 import json, zlib
 from mapper import Map
+from math import sqrt
 
 class Var():
 	def __init__(self, name, value, writeable=True, varlist=None):
@@ -48,13 +49,14 @@ class Location():
 		self.y = y
 		self.l = l #level
 		self.w = w #world
-		self.pos = property(self._getpos, self._setpos)
+		self.pos = property(self.getpos, self.setpos)
 
 		if data:
 			if type(data) is str: self.loads(data)
 			elif type(data) is dict: self.load(data)
-			elif type(data) is list: 
-				self.x, self.y, self.l, self.w  = data
+			elif type(data) is list or type(data) is tuple:
+				if len(data) == 4: self.x, self.y, self.l, self.w  = data
+				elif len(data) == 2: self.x, self.y = data
 		if loc and isinstance(loc, Location):
 			self.x = loc.x
 			self.y = loc.y
@@ -64,6 +66,9 @@ class Location():
 	def dump(self): return {'x':self.x, 'y':self.y, 'l':self.l, 'w':self.w}
 	def dumps(self): return json.dumps(self.dump())
 
+	def update(self, *args, **kwargs):
+		self = Location(*args, **kwargs)
+
 	def load(self, d):
 		self.__dict__.update(d)
 		return self
@@ -72,10 +77,10 @@ class Location():
 		self.load(json.loads(d))
 		return self
 
-	def _getpos(self):
+	def getpos(self):
 		return [self.x, self.y]
 
-	def _setpos(self, val):
+	def setpos(self, val):
 		self.x = val[0]
 		self.y = val[1]
 
@@ -100,11 +105,15 @@ class Location():
 	def __repr__(self):
 		return "<Location x=%s, y=%s, l=%s w=%s>" % (self.x, self.y, self.l, self.w)
 
+	def distance(self, loc):
+		c = ((self[0]-loc[0])^2)+((self[1]-loc[1])^2)
+		return sqrt(abs(c))
+
 class Level():
 	def __init__(self, lid=1, mapobj=None, data=None):
 		self.id = lid
 		self.map = mapobj
-		self.ents = {} #Dont serialize this for now (until I figure out what its gonna do)
+		self.ents = {} #Dont serialize this (because addEnt/rmvEnt packets)
 
 		if data:
 			self.load(data)
@@ -113,17 +122,28 @@ class Level():
 		else:
 			self.start = [0, 0]
 
+	def addEnt(self, ent):
+		self.ents[ent.id] = ent
+
 	def dump(self):
+		i = {}
+		for ent in self.ents.keys():
+			i[ent] = self.ents[ent].dump()
 		return {
 			'id':self.id,
 			'map':self.map.getOrg(),
-			'start':self.start
+			'start':self.start,
+			'ents':i
 		}
 
 	def load(self, obj):
+		from entity import MobHolder #Cleanup later
 		self.id = int(obj['id'])
 		self.map = Map(*obj['map'])
 		self.start = obj['start']
+		for ent in obj['ents'].values():
+			m = MobHolder(data=ent)
+			self.ents[m.id] = m
 
 class World():
 	def __init__(self, wid=1, levels={}, data=None):
@@ -172,4 +192,3 @@ def checkMove(player, loc, lvl):
 	if -1 <= player.pos.x-loc.x <= 1 and -1 <= player.pos.y-loc.y <= 1 and lvl.checkMove(loc):
 		return True
 	return False
-

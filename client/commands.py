@@ -44,5 +44,5 @@ def ping_cmd(c, g):
 		g.addMsg('Ping: %s' % rt)
 		del g.conn.actions['PONG']
 	st = time.time()
-	g.conn.actions['PONG'] = resp
-	g.conn.write({'action':'PING'})
+	g.conn.actions['_PONG'] = resp
+	g.conn.write({'action':'PING', 'respkey':'_PONG'})
