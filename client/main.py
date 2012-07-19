@@ -27,9 +27,10 @@ class Game():
 		self.disp = Display(win, self)
 		self.inp = inp
 		self.running = False
-		self.worlds = {
-			1:World(1, test)
-		}
+		self.worlds = {}
+		# self.worlds = {
+		# 	1:World(1, test)
+		# }
 
 		self.varlist = Varlist()
 		

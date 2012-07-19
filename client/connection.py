@@ -1,9 +1,9 @@
 import sys, os, time
 import socket, zlib, json
-from lib.lib import Location
+from lib.lib import Location, World
 from lib.entity import Player
 from collections import deque
-import thread
+import thread, zlib
 
 version = 1
 port = 1337
@@ -27,6 +27,7 @@ class Connection():
             'LIST':self.packet_LIST,
             'MSG':self.packet_MSG,
             'KICK':self.packet_KICK,
+            'WORLD':self.packet_WORLD,
         }
         self.server_data = {}
         self.connected = False
@@ -126,3 +127,11 @@ class Connection():
 
     def packet_KICK(self, packet):
         raise Exception(packet['reason'])
+
+    def packet_ZLIB(self, packet):
+        pack = json.loads(zlib.decompress(packet['data']))
+        self.parse(pack)
+
+    def packet_WORLD(self, packet):
+        w = World(data=packet['obj'])
+        self.game.worlds[w.id] = w

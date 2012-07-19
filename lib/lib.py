@@ -1,4 +1,5 @@
-import json
+import json, zlib
+from mapper import Map
 
 class Var():
 	def __init__(self, name, value, writeable=True, varlist=None):
@@ -36,26 +37,31 @@ class Varlist():
 		del self._vl[item]
 
 class Location():
-	def __init__(self, x=0, y=0, w=0, loc=None, data=None):
-		self.x = x
+	def __init__(self, x=0, y=0, l=0, w=0, loc=None, data=None):
+		self.x = x 
 		self.y = y
-		self.w = w
+		self.l = l #level
+		self.w = w #world
 		self.pos = property(self._getpos, self._setpos)
+
 		if data:
 			if type(data) is str: self.loads(data)
 			elif type(data) is dict: self.load(data)
 			elif type(data) is list: 
-				self.x, self.y, self.w = data
+				self.x, self.y, self.l, self.w  = data
 		if loc and isinstance(loc, Location):
 			self.x = loc.x
 			self.y = loc.y
+			self.l = loc.l
 			self.w = loc.w
 
-	def dump(self): return {'x':self.x, 'y':self.y, 'w':self.w}
+	def dump(self): return {'x':self.x, 'y':self.y, 'l':self.l, 'w':self.w}
 	def dumps(self): return json.dumps(self.dump())
-	def load(self, d): 
+
+	def load(self, d):
 		self.__dict__.update(d)
 		return self
+
 	def loads(self, d): 
 		self.load(json.loads(d))
 		return self
@@ -76,25 +82,76 @@ class Location():
 			x, y = obj['x'], obj['y']
 		else: return False
 
-		if self.pos == [x, y]:
-			return True
-		else:
-			return False
+		if self.pos == [x, y]: return True
+		else: return False
 
 	def __repr__(self):
-		return "<Location x=%s, y=%s, w=%s>" % (self.x, self.y, self.w)
+		return "<Location x=%s, y=%s, l=%s w=%s>" % (self.x, self.y, self.l, self.w)
+
+class Level():
+	def __init__(self, lid=1, mapobj=None, data=None):
+		self.id = lid
+		self.map = mapobj
+		self.start = self.map.spawnpos+[self.id]
+		self.ents = {} #Dont serialize this for now (until I figure out what its gonna do)
+
+		if data:
+			self.load(data)
+
+	def dump(self):
+		return {
+			'id':self.id,
+			'map':self.map.getOrg(),
+			'start':self.start
+		}
+
+	def load(self, obj):
+		self.id = int(obj['id'])
+		self.map = Map(*obj['map'])
+		self.start = obj['start']
 
 class World():
-	def __init__(self, wid, level):
+	def __init__(self, wid=1, levels={}, data=None):
 		self.id = wid
-		self.start = Location(data=level.spawnpos+[wid])
-		self.level = level
-		self.ents = {}
+		self.levels = levels
+		if len(self.levels):
+			self.setStart()
+		
+		if data:
+			self.load(data)
 
-	def addEnt(self, ent=None):
-		eid = max(self.ents.keys())+1
-		self.ents[eid] = ent
-		return eid
+	def setStart(self):
+		self.start = Location(data=self.levels[1].start+[self.id])
+
+	def dump(self):
+		lvls = {}
+		for level in self.levels:
+			lvls[level] = self.levels[level].dump()
+
+		return {
+			'id':self.id,
+			'start':self.start.dump(),
+			'levels':lvls
+		}
+
+	def dumps(self):
+		return json.dumps(self.dump())
+
+	def load(self, obj):
+		obj = obj
+		self.id = int(obj['id'])
+		self.start = Location(data=obj['start'])
+		for lvl in obj['levels']:
+			self.levels[lvl] = Level(data=obj['levels'][lvl])
+		self.setStart()
+
+	def loads(self, obj):
+		return self.load(json.loads(obj))
+
+	# def addEnt(self, ent=None):
+	# 	eid = max(self.ents.keys())+1
+	# 	self.ents[eid] = ent
+	# 	return eid
 
 def checkMove(player, loc, lvl):
 	if -1 <= player.pos.x-loc.x <= 1 and -1 <= player.pos.y-loc.y <= 1 and lvl.checkMove(loc):

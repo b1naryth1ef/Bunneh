@@ -30,7 +30,7 @@ class Server():
         self.version = 1
 
         self.worlds = {
-            1:World(1, test)
+            1:World(1, levels={1:Level(1, test)})
         }
 
         self.clients = {}
@@ -66,7 +66,7 @@ server = Server()
 
 class RemoteClient(LineReceiver):
     def __init__(self, addr):
-        self.dbid = 0
+        self.dbid = -1
         self.addr = addr
         self.lastPong = 0
         self.cid = None
@@ -88,9 +88,10 @@ class RemoteClient(LineReceiver):
 
     def connectionLost(self, reason):
         if self.hasConnected:
-            obj = database.getUserByID(self.dbid)
-            obj.pos = self.player.pos.dumps()
-            obj.save()
+            if self.dbid != -1:
+                obj = database.getUserByID(self.dbid)
+                obj.pos = self.player.pos.dumps()
+                obj.save()
             self.server.rmvClient(self.cid)
             for c in self.server.clients.values():
                 c.send({'action':'RMV_ENT', 'id':self.cid, 'type':'player'})
@@ -101,12 +102,12 @@ class RemoteClient(LineReceiver):
             if time.time()-self.lastRecv > .03:
                 self.lastRecv = time.time()
             else: time.sleep(.2)
-        try:
+        if 1==1: #try:
             line = json.loads(line)
             if HOOKS.get(line['action']):
                 HOOKS[line['action']](self, line)
-        except Exception, e:
-            print 'Was not able to parse line! (%s)' % e
+        #except Exception, e:
+        #    print 'Was not able to parse line! (%s)' % e
         if debug: print ">>> ",line
 
     def globalSend(self, data, ignore=True):
@@ -159,6 +160,9 @@ class RemoteClient(LineReceiver):
             if obj is not None:
                 self.dbid = obj.id
                 self.player.pos = Location().loads(obj.pos)
+                for world in self.server.worlds.values():
+                    self.send({'action':'ZLIB', 'data':zlib.compress(json.dumps({'action':'WORLD', 'obj':world.dump()}))})
+                    #self.sendLine('\x01'+)
                 self.send({'action':'JOIN', 'id':self.cid, 'obj':self.player.dump(), 'hash':obj.hashkey})
                 self.waitForInfo = True
             else:

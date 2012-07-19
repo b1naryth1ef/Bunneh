@@ -1,4 +1,4 @@
-from lib import Location
+#from lib import Location
 
 clean = [
 "#######################################",
@@ -20,17 +20,22 @@ action = {}
 class Map(object):
     def __init__(self, clean, actions):
         self.clean = clean
+        self.actions = actions
+
         self.rower = []
         self.hit = {}
-        self.actions = actions
         self.special = {}
         self.spawnpos = [1, 1]
         self.bounds = [0, 0]
         self.genHitMap()
 
+    def getOrg(self):
+        return [self.clean, self.actions]
+
     def checkMove(self, pos):
-        if isinstance(pos, Location): pos = (pos.x, pos.y)
-        else: pos = tuple(pos)
+        # if isinstance(pos, Location): pos = (pos.x, pos.y)
+        # else: 
+        pos = tuple(pos)
         if 0 < pos[0] < self.bounds[0] and 0 < pos[1] < self.bounds[1]:
             if pos in self.hit.keys():
                 return self.hit[tuple(pos)]['empty']
