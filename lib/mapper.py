@@ -36,6 +36,7 @@ class Map(object):
         # if isinstance(pos, Location): pos = (pos.x, pos.y)
         # else: 
         pos = tuple(pos)
+        pos = (pos[0], pos[1])
         if 0 < pos[0] < self.bounds[0] and 0 < pos[1] < self.bounds[1]:
             if pos in self.hit.keys():
                 return self.hit[tuple(pos)]['empty']

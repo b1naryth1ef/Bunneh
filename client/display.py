@@ -25,10 +25,12 @@ class Display(object):
         return
 
     def renderMap(self):
-        for x, row in enumerate(self.game.worlds[self.game.player.pos.w].level.getRender()):
+        for x, row in enumerate(self.game.getCurrentLevel().map.getRender()):
             self.displayText(row, 0, x, fgcolor=(255,   0,   0), bgcolor=(  0,   0,   0))
             self.offset += 1
         for plyr in self.game.players.values():
+            if self.game.var.get('hide_players') and not plyr == self.game.player:
+                continue
             pos = plyr.pos
             self.displayText(plyr.char, pos.x, pos.y, fgcolor=(0,255,0))
 
@@ -36,7 +38,7 @@ class Display(object):
         ret = False
         for x, i in enumerate(self.game.msg):
             if i['time'] == None: i['time'] = time.time()
-            elif time.time()-i['time'] >= self.game.get('chat_keeptime'):
+            elif time.time()-i['time'] >= self.game.var.get('chat_keeptime'):
                 self.game.msg.pop(x)
                 self.game.update = True
                 ret = True
@@ -51,8 +53,8 @@ class Display(object):
                 self.displayText(name, 0, self.offset, fgcolor=RED)
                 self.displayText(msg['content'], len(name), self.offset, fgcolor=BLUE)
             elif msg['type'] is 'con':
-                self.displayText(str(self.game.get('console_prefix')), 0, self.offset, fgcolor=BLUE)
-                self.displayText(msg['content'], len(self.game.get('console_prefix'))+1, self.offset, fgcolor=RED)
+                self.displayText(str(self.game.var.get('console_prefix')), 0, self.offset, fgcolor=BLUE)
+                self.displayText(msg['content'], len(self.game.var.get('console_prefix'))+1, self.offset, fgcolor=RED)
             self.offset += 1
 
     def displayInfo(self, s=50):

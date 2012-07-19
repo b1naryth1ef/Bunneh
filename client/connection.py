@@ -5,7 +5,7 @@ from lib.entity import Player
 from collections import deque
 import thread, zlib
 
-version = 1
+version = 2
 port = 1337
 prefix = ""
 suffix = "\r\n"
@@ -68,12 +68,13 @@ class Connection():
     def read(self, b=1024, parse=0):
         line = self.c.recv(b)
         if line:
-            for line in line.split('\n'):
+            for line in line.split('\r\n'):
                 if line:
+                    line = zlib.decompress(line)
                     print '"'+line.strip()+'"'
                     line = json.loads(line.strip())
                     if parse == 0: self.parse(line)
-                    elif parse == 1: self.Q.append(line)
+                    elif parse == 1: self.Q.append((line, time.time()))
                     else: return line
         else: self.c.close()
 
@@ -83,7 +84,7 @@ class Connection():
             self.actions[l.get('action')](l)
 
     def write(self, packet, ret=False):
-        self.c.send("%s%s%s" % (prefix, json.dumps(packet), suffix))
+        self.c.send("%s%s%s" % (prefix, zlib.compress(json.dumps(packet)), suffix))
         if ret: return self.read()
 
     def packet_AUTHED(self, packet): pass

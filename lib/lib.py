@@ -11,10 +11,16 @@ class Var():
 		self.canWrite = writeable
 
 	def __str__(self):
-		return self.value
+		return str(self.value)
 
-	def __len__(self):
-		return len(self.value)
+	def __int__(self):
+		return int(self.value)
+
+	def __nonzero__(self):
+		return bool(self.value)
+
+	#def __len__(self):
+	#	return len(self.value)
 
 class Varlist():
 	def __init__(self):
@@ -73,6 +79,12 @@ class Location():
 		self.x = val[0]
 		self.y = val[1]
 
+	def __len__(self):
+		return len([self.x, self.y, self.l, self.w])
+
+	def __getitem__(self, item):
+		return [self.x, self.y, self.l, self.w][item]
+
 	def __eq__(self, obj):
 		if isinstance(obj, Location) and obj.w == self.w:
 			x, y = obj.x, obj.y
@@ -92,11 +104,14 @@ class Level():
 	def __init__(self, lid=1, mapobj=None, data=None):
 		self.id = lid
 		self.map = mapobj
-		self.start = self.map.spawnpos+[self.id]
 		self.ents = {} #Dont serialize this for now (until I figure out what its gonna do)
 
 		if data:
 			self.load(data)
+		elif self.map:
+			self.start = self.map.spawnpos+[self.id]
+		else:
+			self.start = [0, 0]
 
 	def dump(self):
 		return {
@@ -142,7 +157,7 @@ class World():
 		self.id = int(obj['id'])
 		self.start = Location(data=obj['start'])
 		for lvl in obj['levels']:
-			self.levels[lvl] = Level(data=obj['levels'][lvl])
+			self.levels[int(lvl)] = Level(data=obj['levels'][lvl])
 		self.setStart()
 
 	def loads(self, obj):

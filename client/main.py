@@ -2,7 +2,6 @@ from clib.pygcurse import PygcurseWindow
 from clib.inputlib import KeyboardInput
 from clib.const import *
 from lib.lib import World, Location, checkMove, Var, Varlist
-from lib.mapper import test
 from lib.entity import Player
 from connection import Connection
 from display import Display
@@ -28,30 +27,31 @@ class Game():
 		self.inp = inp
 		self.running = False
 		self.worlds = {}
-		# self.worlds = {
-		# 	1:World(1, test)
-		# }
 
-		self.varlist = Varlist()
+		self.var = Varlist()
 		
 		self.msg = []
 		self.players = {}
 
-		self.get = self.varlist.getval
+		# self.get = self.varlist.getval
+
+	def getCurrentLevel(self):
+		return self.worlds[self.player.pos.w].levels[self.player.pos.l]
 
 	def quit(self):
 		self.conn.disconnect()
 		sys.exit()
 
 	def setup(self):
-		Var('console_prefix', '>>', varlist=self.varlist)
-		Var('chat_keeptime', 3, varlist=self.varlist)
+		Var('console_prefix', '>>', varlist=self.var)
+		Var('chat_keeptime', 3, varlist=self.var)
+		Var('hide_players', 0, varlist=self.var)
 
 	def getCurrentWorld(self):
 		return self.worlds[self.player.pos.w]
 
 	def move(self, new):
-		if checkMove(self.player, new, self.getCurrentWorld().level):
+		if checkMove(self.player, new, self.getCurrentLevel().map):
 			self.player.pos = new
 			self.conn.write({'action':'ACTION', 'type':'MOVE', 'pos':new.dump()})  
 			self.disp.updaterender = True
@@ -88,6 +88,11 @@ class Game():
 		name = self.win.input('Username: ', g[0], g[1], fgcolor=BLUE)
 		self.conn.connect(game=self, ip=ip, name=name)
 
+	def _specloop(self):
+		self.disp.render()
+		if len(self.conn.Q):
+			self.conn.parse(self.conn.Q.popleft()[0])
+
 	def startLoop(self):
 		self.setup()
 		thread.start_new_thread(self.conn.loop, ())
@@ -95,9 +100,7 @@ class Game():
 		self.conn.write({'action':'INFO'})
 		while True:
 			time.sleep(.03)
-			self.disp.render()
-			if len(self.conn.Q):
-				self.conn.parse(self.conn.Q.popleft())
+			self._specloop()
 			inp.retrieve()
 			new = Location(loc=self.player.pos)
 			if inp.value != ([], []):
@@ -107,11 +110,11 @@ class Game():
 				if 's' in inp.value[0]: new.y += 1
 				if 'd' in inp.value[0]: new.x += 1
 				if 't' in inp.value[0]:
-					txt = self.win.input("Talk: ", 0, self.disp.offset, fgcolor=BLUE)
+					txt = self.win.input("Talk: ", 0, self.disp.offset, fgcolor=BLUE, callbackfn=self._specloop)
 					if txt: self.conn.write({'action':'ACTION', 'type':'MSG', 'data':txt})
 					self.update = True
 				if 'c' in inp.value[0]:
-					txt = self.win.input("Console: ", 0, self.disp.offset, fgcolor=BLUE)
+					txt = self.win.input("Console: ", 0, self.disp.offset, fgcolor=BLUE, callbackfn=self._specloop)
 					if txt:
 						txt = txt.split(' ')
 						if commands.get(txt[0]): 

@@ -27,7 +27,7 @@ class Server():
         self.max_clients = max_clients
         self.motd = 'Woooot! Bitches and hoes yo!'
         self.port = 1337
-        self.version = 1
+        self.version = 2
 
         self.worlds = {
             1:World(1, levels={1:Level(1, test)})
@@ -70,7 +70,6 @@ class RemoteClient(LineReceiver):
         self.addr = addr
         self.lastPong = 0
         self.cid = None
-        self.pos = [0, 0]
         self.server = server
         self.hasConnected = False
         self.waitForInfo = False
@@ -80,9 +79,12 @@ class RemoteClient(LineReceiver):
 
         self.group = groups.NewbLevel
 
+    def getCurrentLevel(self):
+        return self.server.worlds[self.player.pos.w].levels[self.player.pos.l]
+
     def send(self, line):
         print 'Send:> %s' % line
-        self.sendLine('%s' % json.dumps(line))
+        self.sendLine(zlib.compress(json.dumps(line)))
 
     def connectionMade(self): pass
 
@@ -102,12 +104,12 @@ class RemoteClient(LineReceiver):
             if time.time()-self.lastRecv > .03:
                 self.lastRecv = time.time()
             else: time.sleep(.2)
-        if 1==1: #try:
-            line = json.loads(line)
+        try:
+            line = json.loads(zlib.decompress(line))
             if HOOKS.get(line['action']):
                 HOOKS[line['action']](self, line)
-        #except Exception, e:
-        #    print 'Was not able to parse line! (%s)' % e
+        except Exception, e:
+            print 'Was not able to parse line! (%s)' % e
         if debug: print ">>> ",line
 
     def globalSend(self, data, ignore=True):
@@ -120,7 +122,7 @@ class RemoteClient(LineReceiver):
         if packet['type'] == "MOVE":
             if self.group.canMove:
                 lc = Location(data=packet['pos'])
-                m = checkMove(self.player, lc, self.server.worlds[self.player.pos.w].level)
+                m = checkMove(self.player, lc, self.getCurrentLevel().map)
                 if lc != self.player.pos and m and time.time()-self.lastMove > self.group.moveThrottle:
                     self.lastMove = time.time()
                     self.globalSend({'action':'POS', 'id':self.player.id, 'location':lc.dump()})
@@ -161,7 +163,7 @@ class RemoteClient(LineReceiver):
                 self.dbid = obj.id
                 self.player.pos = Location().loads(obj.pos)
                 for world in self.server.worlds.values():
-                    self.send({'action':'ZLIB', 'data':zlib.compress(json.dumps({'action':'WORLD', 'obj':world.dump()}))})
+                    self.send({'action':'WORLD', 'obj':world.dump()})
                     #self.sendLine('\x01'+)
                 self.send({'action':'JOIN', 'id':self.cid, 'obj':self.player.dump(), 'hash':obj.hashkey})
                 self.waitForInfo = True

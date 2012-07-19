@@ -13,8 +13,8 @@ def cmd(c):
 @cmd('echo')
 def echo_cmd(c, g):
 	if c[1].startswith('$'):
-		if g.varlist.has(c[1][1:]):
-			g.addMsg('%s: %s' % (c[1][1:], g.varlist.get(c[1][1:]).value))
+		if g.var.has(c[1][1:]):
+			g.addMsg('%s: %s' % (c[1][1:], g.var.get(c[1][1:]).value))
 	else:
 		g.addMsg(' '.join(c[1:]))
 
@@ -22,11 +22,11 @@ def echo_cmd(c, g):
 def echo_cmd(c, g):
 	if len(c) >= 3:
 		if c[1].startswith('$'): c[1] = c[1][1:]
-		if g.varlist.has(c[1]):
-			if g.varlist.get(c[1]).canWrite:
+		if g.var.has(c[1]):
+			if g.var.get(c[1]).canWrite:
 				if len(c) == 3 and c[2].isdigit(): v = int(c[2])
 				else: v = ' '.join(c[2:])
-				g.varlist.get(c[1]).value = v
+				g.var.get(c[1]).value = v
 				g.addMsg('Var %s set to %s' % (c[1], v))
 			else:
 				g.addMsg('Var %s is unwriteable!' % c[1])
