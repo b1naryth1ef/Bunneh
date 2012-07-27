@@ -1,5 +1,61 @@
 from clib.const import *
+from lib.items import test_inventory as inv
 import sys, os, time
+
+class BaseDisplay():
+    def __init__(self, disp):
+        self.d = disp
+        self.game = disp.game
+
+    def render(self): pass
+
+class GameDisplay(BaseDisplay):
+    def render(self):
+        self.d.reset()
+        self.renderMap()
+        self.renderChat()
+        return True
+
+    def renderMap(self):
+        for x, row in enumerate(self.game.getCurrentLevel().map.getRender()):
+            self.d.displayText(row, 0, x, fgcolor=(255,   0,   0), bgcolor=(  0,   0,   0))
+            self.d.offset += 1
+        if not self.game.var.get('hide_ents'):
+            for ent in self.game.getCurrentLevel().ents.values():
+                self.d.displayText(ent.char, ent.pos.x, ent.pos.y, fgcolor=ORANGE)
+        for plyr in self.game.players.values():
+            if self.game.var.get('hide_players') and not plyr == self.game.player:
+                continue
+            pos = plyr.pos
+            self.d.displayText(plyr.char, pos.x, pos.y, fgcolor=(0,255,0))
+
+    def renderChat(self):
+        self.d.offset += 1
+        self.game.checkChat()
+        for msg in self.game.msg:
+            if msg['type'] is 'msg':
+                name = '%s: ' % self.game.players[msg['id']].name
+                self.d.displayText(name, 0, self.offset, fgcolor=RED)
+                self.d.displayText(msg['content'], len(name), self.d.offset, fgcolor=BLUE)
+            elif msg['type'] is 'con':
+                self.d.displayText(str(self.game.var.get('console_prefix')), 0, self.d.offset, fgcolor=BLUE)
+                self.d.displayText(msg['content'], len(self.game.var.get('console_prefix'))+1, self.d.offset, fgcolor=RED)
+            self.offset += 1
+
+class InventoryDisplay(BaseDisplay):
+    def render(self):
+        self.d.reset()
+        self.renderList()
+        return True
+
+    def renderList(self):
+        setb = 1
+        for item in inv.getFilledSlots():
+            self.d.offset += 1
+            btxt = "#%s" % item
+            self.d.displayText(btxt, setb, self.d.offset, fgcolor=BLUE)
+            self.d.displayText(':', setb+len(btxt)+1, self.d.offset, fgcolor=ORANGE)
+            self.d.displayText(inv.getItem(item).name, setb+len(btxt)+2, self.d.offset, fgcolor=RED)
 
 class Display(object):
     def __init__(self, win, game):
@@ -9,56 +65,22 @@ class Display(object):
         self.offset = 0
         self.chat_times = {}
 
-    def clear(self):
-        self.win.setscreencolors(clear=True)
+        self.displaymodes = [GameDisplay(self), InventoryDisplay(self)]
+        self.displaymode = 0
+
+    def blank(self): self.win.setscreencolors(clear=True)
+    def clear(self): 
+        self.blank()
         self.win.update()
+    def reset(self):
+        self.blank()
+        self.offset = 0
 
     def render(self):
-        if self.updaterender:
-            self.offset = 0
-            self.win.setscreencolors(clear=True)
-            self.renderMap()
-            self.renderChat()
-            #self.displayInfo()
+        if self.updaterender and self.displaymodes[self.displaymode].render():
             self.updaterender = False
             self.win.update()
         return
-
-    def renderMap(self):
-        for x, row in enumerate(self.game.getCurrentLevel().map.getRender()):
-            self.displayText(row, 0, x, fgcolor=(255,   0,   0), bgcolor=(  0,   0,   0))
-            self.offset += 1
-        if not self.game.var.get('hide_ents'):
-            for ent in self.game.getCurrentLevel().ents.values():
-                self.displayText(ent.char, ent.pos.x, ent.pos.y, fgcolor=ORANGE)
-        for plyr in self.game.players.values():
-            if self.game.var.get('hide_players') and not plyr == self.game.player:
-                continue
-            pos = plyr.pos
-            self.displayText(plyr.char, pos.x, pos.y, fgcolor=(0,255,0))
-
-    def checkChat(self):
-        ret = False
-        for x, i in enumerate(self.game.msg):
-            if i['time'] == None: i['time'] = time.time()
-            elif time.time()-i['time'] >= self.game.var.get('chat_keeptime'):
-                self.game.msg.pop(x)
-                self.game.update = True
-                ret = True
-        return ret
-
-    def renderChat(self):
-        self.offset += 1
-        self.checkChat()
-        for msg in self.game.msg:
-            if msg['type'] is 'msg':
-                name = '%s: ' % self.game.players[msg['id']].name
-                self.displayText(name, 0, self.offset, fgcolor=RED)
-                self.displayText(msg['content'], len(name), self.offset, fgcolor=BLUE)
-            elif msg['type'] is 'con':
-                self.displayText(str(self.game.var.get('console_prefix')), 0, self.offset, fgcolor=BLUE)
-                self.displayText(msg['content'], len(self.game.var.get('console_prefix'))+1, self.offset, fgcolor=RED)
-            self.offset += 1
 
     def displayInfo(self, s=50):
         self.displayText('-'*80, 0, s)
@@ -91,18 +113,12 @@ class Display(object):
     def displayText(self, *args, **kwargs):
         self.win.putchars(*args, **kwargs)
 
-    def title(self):
-        self.centerText('INVISIBITCH - The Game', fgcolor=RED)
-        self.centerText('By B1naryTh1ef', y=2, fgcolor=RED)
-        self.centerText('press [a]', y=5, fgcolor=GREEN)
-        self.win.update()
-
     def message(self, message, *args, **kwargs):
-        self.win.setscreencolors(clear=True)
+        self.blank()
         self.centerText(message, 0, 0, *args, **kwargs)
         self.centerText('[enter]', 1, 0, *args, **kwargs)
         self.win.update()
         self.game.inp.waitFor('enter')
         self.updaterender = True
 
-    def invScreen(self): pass
+

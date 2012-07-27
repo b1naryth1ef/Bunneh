@@ -40,7 +40,7 @@ class Server():
         self.clients = {}
         self.slots = range(1, self.max_clients+1)
 
-        self.addEntity('LOVE_BUNNY', Location(data=[1, 1, 1, 1]))
+        #self.addEntity('LOVE_BUNNY', Location(data=[1, 1, 1, 1]))
 
     def getLevel(self, pos):
         return self.worlds[pos.w].levels[pos.l]
@@ -126,9 +126,12 @@ class RemoteClient(LineReceiver):
     def getCurrentLevel(self):
         return self.server.worlds[self.player.pos.w].levels[self.player.pos.l]
 
-    def send(self, line):
+    def send(self, line=None, data=None):
         print 'Send:> %s' % line
-        self.sendLine(zlib.compress(json.dumps(line)))
+        if not data:
+            data = compMessage(line)
+        self.sendLine(data)
+        #self.sendLine(zlib.compress(json.dumps(line)))
 
     def connectionMade(self): pass
 
@@ -157,10 +160,10 @@ class RemoteClient(LineReceiver):
         if debug: print ">>> ",line
 
     def globalSend(self, data, ignore=True):
-        data = compMessage(data)
+        datac = compMessage(data)
         for i in self.server.clients.values():
             if i != self or not ignore:
-                i.send(data)
+                i.send(data, datac)
 
     @Hook('ACTION')
     def event_POS(self, packet):
@@ -188,7 +191,7 @@ class RemoteClient(LineReceiver):
     def event_INFO(self, packet):
         self.send({'action':'LIST', 'data':[i.player.dump() for i in self.server.clients.values() if i != self]})
         if self.waitForInfo:
-            self.globalSend({'action':'ADD_ENT', 'type':'player', 'data':{'name':self.player.name, 'id':self.cid, 'loc':self.player.pos.dump()}})
+            self.globalSend({'action':'ADD_ENT', 'type':'player', 'data':self.player.dump()})
             self.waitForInfo = False
 
     @Hook('JOIN')
@@ -197,8 +200,8 @@ class RemoteClient(LineReceiver):
             return self.kick('Invalid Nickname!')
         if packet['version'] != self.server.version:
             return self.kick("Protocol mismatch! (You have %s and we have %s)" % (packet['version'], self.server.version))
-        if self.server.findByName(packet['name']):
-            return self.kick('That user is already joined!')
+        if self.server.findByName(packet['name'].lower()):
+            return self.kick('A user with that name is already joined!')
         self.cid = self.server.addClient(self)
         if self.cid != -1:
             self.player = Player(eid=self.cid, name=packet['name'], pos=self.server.worlds[1].start.dump())
@@ -211,7 +214,6 @@ class RemoteClient(LineReceiver):
                 self.player.pos = Location().loads(obj.pos)
                 for world in self.server.worlds.values():
                     self.send({'action':'WORLD', 'obj':world.dump()})
-                    #self.sendLine('\x01'+)
                 self.send({'action':'JOIN', 'id':self.cid, 'obj':self.player.dump(), 'hash':obj.hashkey})
                 self.waitForInfo = True
             else:
